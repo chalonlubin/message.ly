@@ -102,7 +102,9 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesFrom(username) {
+  static async messagesFrom(fromUser) {
+    const toUser = res.locals.user;
+
     const results = await db.query(
       `SELECT m.id AS id,
               m.to_username AS to_user,
@@ -114,21 +116,23 @@ class User {
               t.last_name AS last_name,
               t.phone AS phone,
        FROM messages AS m
-       JOIN users AS t ON m.from_username = t.username
+       JOIN users AS t ON m.to_username = $2
        WHERE t.username = $1`
-      [username]);
+      [fromUser, toUser]);
 
     const mFrom = results.rows;
 
     if (!mFrom) throw new NotFoundError(`No such user: ${username}`)
 
-    return {
-      id: mFrom.id,
-      to_user: mFrom.username,
-      body: mFrom.body,
-      sent_at: mFrom.sent_at,
-      read_at: mFrom.read_at,
-    };
+    return mFrom.map(m => {
+      return {
+          id: m.id,
+          to_user: m.username,
+          body: m.body,
+          sent_at: m.sent_at,
+          read_at: m.read_at,
+        };
+    })
   }
 
 
