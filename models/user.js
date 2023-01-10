@@ -38,7 +38,7 @@ class User {
       [username]);
   const user = result.rows[0];
 
-  return await bcrypt.compare(password, user.password) === true;
+  return user && await bcrypt.compare(password, user.password) === true;
   // if (user) {
   //   if (await bcrypt.compare(password, user.password) === true) {
   //     return res.json({ message: "Logged in!" });
@@ -66,7 +66,7 @@ class User {
 
   /** All: basic info on all users:
    * [{username, first_name, last_name}, ...] */
-
+//TODO: add order by username
   static async all() {
     const results = await db.query(
       `SELECT username, first_name, last_name
@@ -107,17 +107,17 @@ class User {
    */
 
   static async messagesFrom(fromUser) {
-
+//TODO: remove the as in select
     const results = await db.query(
       `SELECT m.id AS id,
-              m.to_username AS to_user,
-              m.body AS body,
-              m.sent_at AS sent_at,
-              m.read_at AS read_at,
-              u.username AS username,
-              u.first_name AS first_name,
-              u.last_name AS last_name,
-              u.phone AS phone
+              m.to_username,
+              m.body,
+              m.sent_at,
+              m.read_at,
+              u.username,
+              u.first_name,
+              u.last_name,
+              u.phone
        FROM messages AS m
        JOIN users AS u ON m.to_username = u.username
        WHERE m.from_username = $1`,
@@ -152,26 +152,22 @@ class User {
    * where from_user is
    *   {username, first_name, last_name, phone}
    */
-
+//TODO: remove the as in the select statements
   static async messagesTo(username) {
     const results = await db.query(
       `SELECT m.id AS id,
-              m.to_username AS to_user,
-              m.body AS body,
-              m.sent_at AS sent_at,
-              m.read_at AS read_at,
-              u.username AS username,
-              u.first_name AS first_name,
-              u.last_name AS last_name,
-              u.phone AS phone
+              m.to_username,
+              m.body,
+              m.sent_at,
+              m.read_at,
+              u.username,
+              u.first_name,
+              u.last_name,
+              u.phone
        FROM messages AS m
        JOIN users AS u ON m.from_username = u.username
        WHERE m.to_username = $1`,
       [username]);
-
-    const msgTo = results.rows;
-
-    if (!msgTo) throw new NotFoundError(`No such user: ${username}`)
 
     return msgTo.map(m => {
       return {
