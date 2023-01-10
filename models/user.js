@@ -54,7 +54,7 @@ class User {
     const result = await db.query(
       `UPDATE users
        SET last_login_at = current_timestamp
-         WHERE username = 'Michael'
+         WHERE username = $1
          RETURNING username, last_login_at`,
     [username]);
   const user = result.rows[0];
@@ -117,10 +117,10 @@ class User {
               u.username AS username,
               u.first_name AS first_name,
               u.last_name AS last_name,
-              u.phone AS phone,
+              u.phone AS phone
        FROM messages AS m
-       JOIN users AS u ON m.from_username = u.username
-       WHERE m.from_username = $1`
+       JOIN users AS u ON m.to_username = u.username
+       WHERE m.from_username = $1`,
       [fromUser]);
 
     const msgFrom = results.rows;
@@ -130,10 +130,15 @@ class User {
     return msgFrom.map(m => {
       return {
           id: m.id,
-          to_user: m.username,
           body: m.body,
-          sent_at: m.sent_at,
           read_at: m.read_at,
+          sent_at: m.sent_at,
+          to_user:{
+            first_name: m.first_name,
+            last_name: m.last_name,
+            phone: m.phone,
+            username: m.username
+          }
         };
     })
   }
@@ -158,23 +163,28 @@ class User {
               u.username AS username,
               u.first_name AS first_name,
               u.last_name AS last_name,
-              u.phone AS phone,
+              u.phone AS phone
        FROM messages AS m
-       JOIN users AS u ON m.to_username = u.username
-       WHERE m.to_username = $1`
-      [fromUser]);
+       JOIN users AS u ON m.from_username = u.username
+       WHERE m.to_username = $1`,
+      [username]);
 
     const msgTo = results.rows;
 
-    if (!msgFrom) throw new NotFoundError(`No such user: ${username}`)
+    if (!msgTo) throw new NotFoundError(`No such user: ${username}`)
 
-    return msgFrom.map(m => {
+    return msgTo.map(m => {
       return {
           id: m.id,
-          to_user: m.username,
           body: m.body,
           sent_at: m.sent_at,
           read_at: m.read_at,
+          from_user:{
+            first_name: m.first_name,
+            last_name: m.last_name,
+            phone: m.phone,
+            username: m.username
+          }
         };
     })
   }

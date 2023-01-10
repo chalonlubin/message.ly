@@ -4,10 +4,10 @@ const Message = require("./models/message");
 
 
 // CHALON KEEP THIS
-let u2 = User.get("Michael")
-.then(u2 => console.log("U2", u2));
+// let u2 = User.get("Michael")
+// .then(u2 => console.log("U2", u2));
 
-
+User.messagesFrom("michael").then(m => console.log('message - ', m));
 
 
 // let michael = ({username: "Michael",
@@ -86,9 +86,28 @@ let u2 = User.get("Michael")
 //   WHERE to_username='Michael';
 
 // TO NOTE: We have access to all of this so we can return the data as we see fit.
+// SELECT m.id AS id,
+//               m.to_username AS to_user,
+//               m.body AS body,
+//               m.sent_at AS sent_at,
+//               m.read_at AS read_at,
+//               u.username AS username,
+//               u.first_name AS first_name,
+//               u.last_name AS last_name,
+//               u.phone AS phone
+//        FROM messages AS m
+//        JOIN users AS u ON m.to_username = u.username
+//        WHERE m.from_username = 'michael';
 
-
-
-
-
-
+//        SELECT m.id AS id,
+//        m.to_username AS to_user,
+//        m.body AS body,
+//        m.sent_at AS sent_at,
+//        m.read_at AS read_at,
+//        u.username AS username,
+//        u.first_name AS first_name,
+//        u.last_name AS last_name,
+//        u.phone AS phone
+// FROM messages AS m
+// JOIN users AS u ON m.to_username = u.username
+// WHERE m.from_username = 'michael';
