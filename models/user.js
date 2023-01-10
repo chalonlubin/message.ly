@@ -1,6 +1,6 @@
 "use strict";
 
-const { NotFoundError } = require("../expressError");
+const { NotFoundError, BadRequestError } = require("../expressError");
 const db = require("../db");
 const bcrypt = require("bcrypt")
 const { BCRYPT_WORK_FACTOR } = require("../config")
@@ -15,6 +15,7 @@ class User {
    */
 
   static async register({ username, password, first_name, last_name, phone }) {
+    await this.checkDupUsername(username);
 
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
@@ -99,6 +100,18 @@ class User {
        return user;
   }
 
+  static async checkDupUsername(username){
+    const user = await db.query(
+      `SELECT username
+       FROM users
+       WHERE username = $1`,
+       [username])
+
+    if(user.rows[0]){
+      throw new BadRequestError(`Username ${username} is already taken.`)
+    }
+  }
+
   /** Return messages from this user.
    *
    * [{id, to_user, body, sent_at, read_at}]
@@ -169,6 +182,8 @@ class User {
        JOIN users AS u ON m.from_username = u.username
        WHERE m.to_username = $1`,
       [username]);
+
+    const msgTo = results.rows;
 
     return msgTo.map(m => {
       return {
