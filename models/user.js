@@ -66,11 +66,12 @@ class User {
 
   /** All: basic info on all users:
    * [{username, first_name, last_name}, ...] */
-//TODO: add order by username
+
   static async all() {
     const results = await db.query(
       `SELECT username, first_name, last_name
-       FROM users`
+       FROM users
+       ORDER BY username`
     )
     return results.rows
   }
@@ -107,7 +108,7 @@ class User {
    */
 
   static async messagesFrom(fromUser) {
-//TODO: remove the as in select
+
     const results = await db.query(
       `SELECT m.id AS id,
               m.to_username,
@@ -152,7 +153,7 @@ class User {
    * where from_user is
    *   {username, first_name, last_name, phone}
    */
-//TODO: remove the as in the select statements
+
   static async messagesTo(username) {
     const results = await db.query(
       `SELECT m.id AS id,
