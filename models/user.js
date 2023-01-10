@@ -1,6 +1,9 @@
 "use strict";
 
+const { NotFoundError } = require("../expressError");
 const db = require("../db");
+const bcrypt = require("bcrypt")
+const { BCRYPT_WORK_FACTOR } = require("../config")
 
 /** User of the site. */
 
@@ -15,13 +18,13 @@ class User {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_WORK_FACTOR);
 
     const result = await db.query(
-      `INSERT INTO users (username, password, first_name, last_name, phone)
+      `INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
          VALUES
-           ($1, $2, $3, $4, $5)
+           ($1, $2, $3, $4, $5,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
          RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]);
-
-    return res.json(result.rows[0]);
+    return("that worked!")
+    // return result.rows[0];
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
@@ -103,7 +106,6 @@ class User {
    */
 
   static async messagesFrom(fromUser) {
-    const toUser = res.locals.user;
 
     const results = await db.query(
       `SELECT m.id AS id,
@@ -111,20 +113,20 @@ class User {
               m.body AS body,
               m.sent_at AS sent_at,
               m.read_at AS read_at,
-              t.username AS username,
-              t.first_name AS first_name,
-              t.last_name AS last_name,
-              t.phone AS phone,
+              u.username AS username,
+              u.first_name AS first_name,
+              u.last_name AS last_name,
+              u.phone AS phone,
        FROM messages AS m
-       JOIN users AS t ON m.to_username = $2
-       WHERE t.username = $1`
-      [fromUser, toUser]);
+       JOIN users AS u ON m.from_username = u.username
+       WHERE m.from_username = $1`
+      [fromUser]);
 
-    const mFrom = results.rows;
+    const msgFrom = results.rows;
 
-    if (!mFrom) throw new NotFoundError(`No such user: ${username}`)
+    if (!msgFrom) throw new NotFoundError(`No such user: ${username}`)
 
-    return mFrom.map(m => {
+    return msgFrom.map(m => {
       return {
           id: m.id,
           to_user: m.username,
@@ -146,6 +148,34 @@ class User {
    */
 
   static async messagesTo(username) {
+    const results = await db.query(
+      `SELECT m.id AS id,
+              m.to_username AS to_user,
+              m.body AS body,
+              m.sent_at AS sent_at,
+              m.read_at AS read_at,
+              u.username AS username,
+              u.first_name AS first_name,
+              u.last_name AS last_name,
+              u.phone AS phone,
+       FROM messages AS m
+       JOIN users AS u ON m.to_username = u.username
+       WHERE m.to_username = $1`
+      [fromUser]);
+
+    const msgTo = results.rows;
+
+    if (!msgFrom) throw new NotFoundError(`No such user: ${username}`)
+
+    return msgFrom.map(m => {
+      return {
+          id: m.id,
+          to_user: m.username,
+          body: m.body,
+          sent_at: m.sent_at,
+          read_at: m.read_at,
+        };
+    })
   }
 }
 
