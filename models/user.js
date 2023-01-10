@@ -21,7 +21,7 @@ class User {
     const result = await db.query(
       `INSERT INTO users (username, password, first_name, last_name, phone, join_at, last_login_at)
          VALUES
-           ($1, $2, $3, $4, $5,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+           ($1, $2, $3, $4, $5, current_timestamp, current_timestamp)
          RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]);
 
@@ -38,7 +38,7 @@ class User {
       [username]);
   const user = result.rows[0];
 
-  return user && await bcrypt.compare(password, user.password) === true;
+  return (user && await bcrypt.compare(password, user.password) === true);
   // if (user) {
   //   if (await bcrypt.compare(password, user.password) === true) {
   //     return res.json({ message: "Logged in!" });
