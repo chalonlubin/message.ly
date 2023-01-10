@@ -9,7 +9,8 @@ const { BCRYPT_WORK_FACTOR } = require("../config")
 
 class User {
 
-  /** Register new user. Returns
+  /** Register new user.
+   *  Returns
    *    {username, password, first_name, last_name, phone}
    */
 
@@ -23,8 +24,8 @@ class User {
            ($1, $2, $3, $4, $5,CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
          RETURNING username, password, first_name, last_name, phone`,
       [username, hashedPassword, first_name, last_name, phone]);
-    return("that worked!")
-    // return result.rows[0];
+
+    return result.rows[0];
   }
 
   /** Authenticate: is username/password valid? Returns boolean. */
@@ -53,12 +54,14 @@ class User {
     const result = await db.query(
       `UPDATE users
        SET last_login_at = current_timestamp
-         WHERE username = $1
+         WHERE username = 'Michael'
          RETURNING username, last_login_at`,
     [username]);
   const user = result.rows[0];
 
   if (!user) throw new NotFoundError(`No such user: ${username}`);
+
+  return user;
   }
 
   /** All: basic info on all users:
@@ -67,8 +70,7 @@ class User {
   static async all() {
     const results = await db.query(
       `SELECT username, first_name, last_name
-       FROM users
-       RETURNING username, first_name, last_name`
+       FROM users`
     )
     return results.rows
   }
@@ -79,22 +81,21 @@ class User {
    *          first_name,
    *          last_name,
    *          phone,
-   *          join_at,
-   *          last_login_at } */
+   *          last_login_at,
+   *          join_at } */
 
   static async get(username) {
     const results = await db.query(
       `SELECT username,first_name,last_name,phone,join_at,last_login_at
        FROM users
-       WHERE username = $1
-       RETURNING username,first_name,last_name,phone,join_at,last_login_at`,
+       WHERE username = $1`,
        [username])
 
-       const user = results.rows[0]
+       const user = results.rows[0];
 
        if (!user) throw new NotFoundError(`No such user: ${username}`);
 
-       return user
+       return user;
   }
 
   /** Return messages from this user.
